@@ -4,5 +4,5 @@ exports.cookieExtractor = (req)=>{
     return token;
 }
 exports.sanitizeUser = (doc)=>{
-    return {email:doc.email}
+    return {id:doc.id,email:doc.email}
 }

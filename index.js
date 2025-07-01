@@ -6,6 +6,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const JwtStrategy = require('passport-jwt').Strategy;
 const crypto = require('crypto');
+const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken');
 const express_session = require('express-session')
 const authRouter = require('./Routes/Auth');
@@ -29,6 +30,7 @@ opts.jwtFromRequest = cookieExtractor;
 opts.secretOrKey = SECRET_KEY;
 
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express_session({
     secret: 'keyboard cat',
@@ -48,9 +50,9 @@ passport.use(new LocalStrategy(
                 if(!crypto.timingSafeEqual(user.password,hashedPassword)){
                     return done(null,false,{message:"Invalid Credentials"});
                 }
+                const token = jwt.sign(sanitizeUser(user),process.env.SECRET_KEY);
+                return done(null,{...user,token:token});
             })
-            const token = jwt.sign(sanitizeUser(user),process.env.SECRET_KEY);
-            return done(null,{...user,token:token});
         }
     }
 ));
@@ -58,7 +60,7 @@ passport.use(new LocalStrategy(
 passport.use('jwt',new JwtStrategy(opts,async function(jwt_payload,done){
     try{
         const user = await User.findById(jwt_payload.id);
-        if(user) return done(null,user);
+        if(user) return done(null,sanitizeUser(user));
         else return done(null,false);
     }
     catch(err){

@@ -13,7 +13,7 @@ exports.createUser = (req,res)=>{
                 if(err) res.status(400).json(err);
                 else{
                     const token =  jwt.sign(sanitizeUser(doc),process.env.SECRET_KEY);
-                    res.cookie('jwt',token,{expires:new Date(Date.now()+3600000),httpOnly:true}).status(200).json(token);
+                    res.cookie('jwt',token,{expires:new Date(Date.now()+3600000),httpOnly:true}).status(200).json(req.user);
                 }
             })
         })
@@ -25,9 +25,14 @@ exports.createUser = (req,res)=>{
 
 exports.loginUser = (req,res)=>{
     try{
-        res.cookie('jwt',req.user.token,{expires: new Date(Date.now()+3600000),httpOnly:true}).json(req.user.token);
+        res.cookie('jwt',req.user.token,{expires: new Date(Date.now()+3600000),httpOnly:true}).json(req.user);
     }
     catch(err){
         res.status(400).json(err)
     }
+}
+
+exports.checkAuth = (req,res)=>{
+    if(req.user) res.json(req.user);
+    else res.status(401);
 }
